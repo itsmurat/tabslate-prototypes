@@ -1,0 +1,1839 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tabs — Custom email domain concept</title>
+    <style>
+      :root {
+        --ink: #171717;
+        --muted: #6b6b66;
+        --faint: #93938c;
+        --line: #e7e6e1;
+        --surface: #ffffff;
+        --canvas: #f6f6f2;
+        --soft: #f1f1ec;
+        --green: #177a4d;
+        --green-soft: #e9f6ef;
+        --amber: #8a5a06;
+        --amber-soft: #fff7df;
+        --red: #a4322c;
+        --blue-50: #edf5fe;
+        --blue-100: #d9e9fc;
+        --blue-200: #b9d6f9;
+        --blue-500: #2476d8;
+        --blue-700: #1a5499;
+        --orange-50: #fef0e8;
+        --orange-200: #fccaad;
+        --orange-500: #c0591f;
+        --shadow: 0 1px 2px rgb(16 24 16 / 5%), 0 12px 32px rgb(16 24 16 / 5%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 1100px;
+        color: var(--ink);
+        background: var(--canvas);
+        font-family:
+          Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        color: inherit;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 232px 1fr;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 24px 16px;
+        border-right: 1px solid var(--line);
+        background: #fbfbf8;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 38px;
+        padding: 0 10px;
+        margin-bottom: 28px;
+        font-size: 21px;
+        font-weight: 750;
+        letter-spacing: -0.04em;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 25px;
+        height: 25px;
+        place-items: center;
+        border-radius: 7px;
+        color: #fff;
+        background: var(--ink);
+        font-size: 13px;
+        letter-spacing: -0.08em;
+      }
+
+      .nav-label {
+        padding: 0 10px;
+        margin: 22px 0 8px;
+        color: var(--faint);
+        font-size: 11px;
+        font-weight: 650;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        width: 100%;
+        height: 42px;
+        padding: 0 11px;
+        border: 0;
+        border-radius: 8px;
+        color: #575751;
+        background: transparent;
+        font-size: 14px;
+        text-align: left;
+      }
+
+      .nav-item.active {
+        color: var(--ink);
+        background: #ecece6;
+        font-weight: 600;
+      }
+
+      .nav-icon {
+        width: 18px;
+        color: #777770;
+      }
+
+      .sidebar-user {
+        position: absolute;
+        right: 16px;
+        bottom: 20px;
+        left: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+      }
+
+      .avatar {
+        display: grid;
+        width: 31px;
+        height: 31px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 50%;
+        color: #fff;
+        background: #616b58;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .user-name {
+        font-weight: 650;
+      }
+
+      .user-company {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .main {
+        padding: 54px 64px 96px;
+      }
+
+      .page {
+        max-width: 970px;
+        margin: 0 auto;
+      }
+
+      .breadcrumb {
+        margin-bottom: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 31px;
+        font-weight: 670;
+        letter-spacing: -0.035em;
+      }
+
+      .page-subtitle {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .prototype-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 28px 0 18px;
+        padding: 12px 14px;
+        border: 1px dashed #cfcec6;
+        border-radius: 10px;
+        background: rgb(255 255 255 / 55%);
+      }
+
+      .prototype-label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .prototype-label strong {
+        margin-right: 7px;
+        color: var(--ink);
+      }
+
+      .state-switcher {
+        display: flex;
+        gap: 4px;
+        padding: 3px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .state-button {
+        padding: 7px 10px;
+        border: 0;
+        border-radius: 6px;
+        color: var(--muted);
+        background: transparent;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .state-button:hover {
+        color: var(--ink);
+        background: var(--soft);
+      }
+
+      .state-button.active {
+        color: #fff;
+        background: var(--ink);
+      }
+
+      .card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 25px 28px 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+
+      .card-description {
+        max-width: 620px;
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        flex: 0 0 auto;
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: #292524;
+        background: #f5f6ee;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+        font-weight: 650;
+        white-space: nowrap;
+      }
+
+      .status-pill.green {
+        color: var(--green);
+        background: var(--green-soft);
+      }
+
+      .status-pill.amber {
+        color: var(--orange-500);
+        background: var(--orange-50);
+      }
+
+      .status-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .card-body {
+        padding: 28px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      .label {
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .input {
+        width: 100%;
+        min-height: 38px;
+        padding: 8px 16px;
+        border: 1px solid #e7e5e4;
+        border-radius: 6px;
+        outline: none;
+        color: var(--ink);
+        background: #fff;
+        font-size: 14px;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+
+      .input:focus {
+        border-color: #0c0a09;
+        box-shadow: none;
+      }
+
+      .input[readonly],
+      .input:disabled {
+        color: #5c5c57;
+        background: var(--soft);
+      }
+
+      .helper {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .divider {
+        height: 1px;
+        margin: 27px 0;
+        background: var(--line);
+      }
+
+      .section-title {
+        margin-bottom: 7px;
+        font-size: 14px;
+        font-weight: 650;
+      }
+
+      .section-copy {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .choice-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+      }
+
+      .choice {
+        position: relative;
+        min-height: 130px;
+        padding: 17px 17px 15px;
+        border: 1px solid #dad9d2;
+        border-radius: 10px;
+        background: var(--surface);
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+
+      .choice:hover {
+        border-color: #aaa9a1;
+      }
+
+      .choice.selected {
+        border-color: var(--ink);
+        background: #fbfbf8;
+        box-shadow: inset 0 0 0 1px var(--ink);
+      }
+
+      .choice-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+      }
+
+      .radio {
+        display: grid;
+        width: 12px;
+        height: 12px;
+        flex: 0 0 auto;
+        place-items: center;
+        margin-top: 4px;
+        border: 1px solid #0c0a09;
+        border-radius: 50%;
+        background: #fff;
+      }
+
+      .selected .radio {
+        border-color: #0c0a09;
+        background: #0c0a09;
+        box-shadow: inset 0 0 0 3px #fff;
+      }
+
+      .choice-title {
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .choice-copy {
+        margin: 7px 0 0 28px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .email-preview {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 13px 0 0 28px;
+        color: #55554f;
+        font-size: 11px;
+      }
+
+      .mini-avatar {
+        display: grid;
+        width: 25px;
+        height: 25px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: var(--soft);
+        font-weight: 700;
+      }
+
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 9px;
+        min-height: 69px;
+        padding: 13px 28px;
+        border-top: 1px solid var(--line);
+        background: #fbfbf8;
+      }
+
+      .button {
+        height: 38px;
+        padding: 0 16px;
+        border: 1px solid #d7dcbd;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          transform 0.15s;
+      }
+
+      .button:hover {
+        background: #eaedd9;
+        border-color: #eaedd9;
+      }
+
+      .button:active {
+        transform: scale(0.98);
+      }
+
+      .button.primary {
+        border-color: var(--blue-500);
+        border-radius: 999px;
+        color: #fff;
+        background: var(--blue-500);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      .button.primary:hover {
+        border-color: var(--blue-700);
+        background: var(--blue-700);
+      }
+
+      .button.danger {
+        color: var(--red);
+      }
+
+      .button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      .button.link {
+        height: auto;
+        padding: 0;
+        border: 0;
+        color: var(--ink);
+        background: none;
+        font-size: 12px;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .notice {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-height: 56px;
+        padding: 9px 16px;
+        border: 1px solid var(--orange-200);
+        border-radius: 8px;
+        color: #4b230c;
+        background: var(--orange-50);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .notice.neutral {
+        border-color: var(--blue-200);
+        color: #0e2e55;
+        background: var(--blue-50);
+      }
+
+      .notice.green {
+        border-color: #c8e6d5;
+        color: #175c3d;
+        background: var(--green-soft);
+      }
+
+      .notice-icon {
+        flex: 0 0 auto;
+        font-weight: 750;
+      }
+
+      .code-wrap {
+        max-width: 430px;
+        margin: 3px auto 7px;
+        text-align: center;
+      }
+
+      .mail-icon,
+      .success-icon {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        background: var(--soft);
+        font-size: 18px;
+      }
+
+      .success-icon {
+        color: var(--green);
+        background: var(--green-soft);
+      }
+
+      .code-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 650;
+      }
+
+      .code-copy {
+        margin: 8px 0 19px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .code-inputs {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 17px;
+      }
+
+      .digit {
+        width: 45px;
+        height: 51px;
+        border: 1px solid #e7e5e4;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 19px;
+        font-weight: 650;
+        outline: none;
+      }
+
+      .digit:focus {
+        border-color: #0c0a09;
+        box-shadow: none;
+      }
+
+      .resend {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .steps {
+        display: flex;
+        align-items: center;
+        padding: 16px 28px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfbf8;
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--faint);
+        font-size: 11px;
+        font-weight: 620;
+      }
+
+      .step.complete,
+      .step.current {
+        color: var(--ink);
+      }
+
+      .step-number {
+        display: grid;
+        width: 20px;
+        height: 20px;
+        place-items: center;
+        border: 1px solid #d2d1ca;
+        border-radius: 50%;
+        background: #fff;
+        font-size: 10px;
+      }
+
+      .step.complete .step-number {
+        border-color: #3f7d52;
+        color: #fff;
+        background: #3f7d52;
+      }
+
+      .step.current .step-number {
+        border-color: var(--blue-500);
+        color: #fff;
+        background: var(--blue-500);
+      }
+
+      .step-line {
+        width: 44px;
+        height: 1px;
+        margin: 0 10px;
+        background: #d9d8d1;
+      }
+
+      .dns-list {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+
+      .dns-row {
+        display: grid;
+        grid-template-columns: 42px 1fr 110px;
+        align-items: center;
+        gap: 13px;
+        padding: 15px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .dns-row:last-child {
+        border-bottom: 0;
+      }
+
+      .dns-type {
+        display: grid;
+        width: 36px;
+        height: 28px;
+        place-items: center;
+        border-radius: 6px;
+        background: var(--soft);
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 750;
+        letter-spacing: 0.04em;
+      }
+
+      .dns-name {
+        margin-bottom: 4px;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .dns-value {
+        overflow: hidden;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .dns-value-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .copy-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex: 0 0 auto;
+        padding: 4px 8px;
+        border: 1px solid #d7dcbd;
+        border-radius: 6px;
+        color: #0c0a09;
+        background: transparent;
+        font-family: inherit;
+        font-size: 10px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .copy-button:hover {
+        border-color: #eaedd9;
+        background: #eaedd9;
+      }
+
+      .dns-status {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        color: var(--amber);
+        font-size: 10px;
+        font-weight: 650;
+      }
+
+      .dns-status.verified {
+        color: var(--green);
+      }
+
+      .success-panel {
+        display: grid;
+        place-items: center;
+        min-height: 210px;
+        padding: 26px;
+        text-align: center;
+      }
+
+      .sender-preview {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 16px;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #fbfbf8;
+        font-size: 11px;
+        text-align: left;
+      }
+
+      .legacy-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+
+      .legacy-item {
+        padding: 15px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .legacy-item:nth-child(odd) {
+        border-right: 1px solid var(--line);
+      }
+
+      .legacy-item:nth-last-child(-n + 2) {
+        border-bottom: 0;
+      }
+
+      .legacy-key {
+        margin-bottom: 5px;
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .legacy-value {
+        font-size: 12px;
+        font-weight: 620;
+      }
+
+      .view {
+        display: none;
+      }
+
+      .view.active {
+        display: block;
+        animation: appear 0.2s ease-out;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @keyframes appear {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Billing settings replica, based on the existing Tabs settings shell. */
+      body {
+        background: #e9e9e7;
+      }
+
+      .proto-banner {
+        position: relative;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 48px;
+        padding: 9px 22px;
+        border-bottom: 3px solid #6af3ff;
+        color: #e7e5e4;
+        background: #1c1917;
+        font-size: 12px;
+      }
+
+      .proto-tag {
+        padding: 3px 7px;
+        border-radius: 3px;
+        color: #0c0a09;
+        background: #6af3ff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .proto-banner .state-switcher {
+        margin-left: auto;
+        border-color: #3f3d3b;
+        background: #292725;
+      }
+
+      .proto-banner .state-button {
+        color: #b9b5b1;
+      }
+
+      .proto-banner .state-button:hover {
+        color: #fff;
+        background: #3b3936;
+      }
+
+      .proto-banner .state-button.active {
+        color: #0c0a09;
+        background: #fff;
+      }
+
+      .shell {
+        grid-template-columns: 200px minmax(0, 1200px);
+        max-width: 1400px;
+        min-height: calc(100vh - 48px);
+        margin: 0 auto;
+        background: #fff;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+        min-height: calc(100vh - 48px);
+        padding: 18px 0;
+        border: 0;
+        color: #d4d4d4;
+        background: #17181a;
+      }
+
+      .brand {
+        height: auto;
+        margin: 0 0 16px;
+        padding: 0 18px 14px;
+        color: #fff;
+        font-size: 20px;
+      }
+
+      .brand-mark {
+        color: #17181a;
+        background: #fff;
+      }
+
+      .nav-label {
+        display: none;
+      }
+
+      .nav-item {
+        height: 35px;
+        padding: 0 18px;
+        border-radius: 0;
+        color: #c9c8c5;
+        opacity: 0.56;
+        font-size: 13px;
+      }
+
+      .nav-item.active {
+        color: #fff;
+        background: rgb(255 255 255 / 6%);
+        opacity: 1;
+      }
+
+      .nav-icon {
+        width: 15px;
+        color: inherit;
+      }
+
+      .sidebar-spacer {
+        height: 16px;
+      }
+
+      .sidebar-user {
+        right: 0;
+        bottom: 0;
+        left: 0;
+        padding: 15px 18px;
+        border-color: #2c2c2e;
+        color: #eee;
+      }
+
+      .user-company {
+        color: #aaa7a2;
+      }
+
+      .main {
+        padding: 0 0 92px;
+        background: #fff;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        min-height: 52px;
+        padding: 0 24px;
+        color: #44403c;
+        background: #d7dcbd;
+        font-size: 13px;
+      }
+
+      .topbar strong {
+        color: #0c0a09;
+      }
+
+      .topbar span + span::before {
+        content: "›";
+        margin: 0 8px;
+        color: #77756e;
+      }
+
+      .settings-content {
+        display: grid;
+        grid-template-columns: minmax(0, 900px) 200px;
+        align-items: start;
+        gap: 24px;
+        padding: 24px;
+      }
+
+      .billing-column h1 {
+        margin: 0 0 35px;
+        font-size: 27px;
+        font-weight: 500;
+        letter-spacing: -0.025em;
+      }
+
+      .settings-nav {
+        padding: 16px;
+        border-radius: 8px;
+        background: #f5f6ee;
+      }
+
+      .settings-nav-title {
+        margin-bottom: 7px;
+        color: #78716c;
+        font-size: 11px;
+        font-weight: 650;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .settings-nav-item {
+        padding: 6px 8px;
+        border-radius: 5px;
+        color: #78716c;
+        font-size: 13px;
+      }
+
+      .settings-nav-item.active {
+        color: #0c0a09;
+        background: #fff;
+        font-weight: 650;
+        box-shadow: 0 0 0 1px #d7dcbd;
+      }
+
+      .billing-section {
+        display: grid;
+        grid-template-columns: 288px minmax(0, 1fr);
+        gap: 32px;
+        padding-bottom: 40px;
+        margin-bottom: 40px;
+        border-bottom: 1px solid #e7e5e4;
+      }
+
+      .billing-section:last-child {
+        border-bottom: 0;
+      }
+
+      .billing-section h2 {
+        margin: 0 0 7px;
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      .billing-section-description {
+        margin: 0;
+        color: #78716c;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .existing-setting {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 54px;
+        padding: 0 2px;
+        border-bottom: 1px solid #f0efed;
+      }
+
+      .existing-setting:last-child {
+        border-bottom: 0;
+      }
+
+      .existing-setting strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .existing-setting span {
+        color: #78716c;
+        font-size: 12px;
+      }
+
+      .feature-panel {
+        overflow: hidden;
+        border: 1px solid #e7e5e4;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .feature-panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 16px 17px;
+        border-bottom: 1px solid #e7e5e4;
+        background: #fafaf9;
+      }
+
+      .feature-panel-head strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+      }
+
+      .feature-panel-head p {
+        margin: 0;
+        color: #78716c;
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .feature-panel-body {
+        padding: 18px;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .input {
+        height: 39px;
+        border-radius: 6px;
+        background: #fff;
+      }
+
+      .choice-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .choice {
+        min-height: auto;
+        padding: 13px;
+        border-radius: 7px;
+      }
+
+      .choice-copy {
+        margin-top: 4px;
+        margin-bottom: 0;
+      }
+
+      .choice .email-preview {
+        display: none;
+      }
+
+      .steps {
+        padding: 12px 17px;
+        background: #fafaf9;
+      }
+
+      .code-wrap {
+        margin: 8px auto 5px;
+      }
+
+      .digit {
+        width: 40px;
+        height: 46px;
+        border-radius: 7px;
+      }
+
+      .dns-row {
+        grid-template-columns: 42px minmax(0, 1fr) 105px;
+        padding: 13px;
+      }
+
+      .success-panel {
+        min-height: 180px;
+      }
+
+      .inline-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 17px;
+      }
+
+      .fixed-save {
+        position: fixed;
+        right: max(0px, calc((100vw - 1400px) / 2));
+        bottom: 0;
+        left: max(200px, calc((100vw - 1400px) / 2 + 200px));
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        min-height: 72px;
+        padding: 12px 24px;
+        border-top: 1px solid #e7e5e4;
+        background: rgb(250 250 249 / 92%);
+        backdrop-filter: blur(5px);
+      }
+
+      .fixed-save .button {
+        min-width: 170px;
+        height: 42px;
+        border-radius: 999px;
+      }
+
+      .fixed-save .button:not(.primary) {
+        border-color: var(--blue-500);
+        color: var(--blue-500);
+        background: transparent;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      .fixed-save .button:not(.primary):hover {
+        background: var(--blue-100);
+      }
+
+      @media (max-width: 1120px) {
+        body {
+          min-width: 900px;
+        }
+
+        .settings-content {
+          grid-template-columns: minmax(0, 1fr) 180px;
+        }
+
+        .billing-section {
+          grid-template-columns: 190px minmax(0, 1fr);
+        }
+      }
+
+      /*
+       * Design-system treatment:
+       * - billing-section mirrors FormSectionWrapper
+       * - inputs/buttons/badges mirror Toretto
+       * - the feature itself is not a card
+       */
+      .feature-panel {
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .feature-panel-head {
+        align-items: center;
+        padding: 0 0 18px;
+        border: 0;
+        background: transparent;
+      }
+
+      .feature-panel-head strong {
+        font-size: 14px;
+      }
+
+      .feature-panel-head p {
+        font-size: 12px;
+      }
+
+      .feature-panel-body {
+        padding: 0;
+      }
+
+      .choice-grid {
+        gap: 4px;
+        border: 0;
+      }
+
+      .choice {
+        min-height: 0;
+        padding: 4px 2px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .choice:hover {
+        border-color: transparent;
+        background: transparent;
+      }
+
+      .choice.selected {
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .choice-title {
+        font-size: 13px;
+      }
+
+      .choice-copy {
+        max-width: 500px;
+      }
+
+      .steps {
+        padding: 0 0 20px;
+        border: 0;
+        background: transparent;
+      }
+
+      .code-wrap {
+        max-width: none;
+        margin: 0;
+        padding: 22px 0 8px;
+        border-top: 1px solid #e7e5e4;
+        text-align: left;
+      }
+
+      .mail-icon {
+        margin: 0 0 13px;
+      }
+
+      .code-inputs {
+        justify-content: flex-start;
+      }
+
+      .success-panel {
+        min-height: 0;
+        padding: 24px 0;
+        border-top: 1px solid #e7e5e4;
+        place-items: start;
+        text-align: left;
+      }
+
+      .success-icon {
+        margin: 0 0 13px;
+      }
+
+      .sender-preview {
+        margin-top: 15px;
+      }
+
+      .legacy-grid {
+        border-right: 0;
+        border-left: 0;
+        border-radius: 0;
+      }
+
+      .inline-actions {
+        padding-top: 2px;
+      }
+
+      .button.stealth {
+        border-color: transparent;
+        color: #44403c;
+        background: transparent;
+      }
+
+      .button.stealth:hover {
+        border-color: #eaedd9;
+        background: #eaedd9;
+      }
+
+      .persistence-note {
+        margin-top: 13px;
+        color: #78716c;
+        font-size: 11px;
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="proto-banner">
+      <span class="proto-tag">Prototype</span>
+      <span><strong>Custom email domain</strong> — proposed section in Settings → Billing</span>
+      <div class="state-switcher" role="tablist" aria-label="Prototype state">
+        <button class="state-button active" data-state="default">Tabs-owned</button>
+        <button class="state-button" data-state="code">Mailbox</button>
+        <button class="state-button" data-state="dns">DNS</button>
+        <button class="state-button" data-state="active">Active</button>
+        <button class="state-button" data-state="legacy">Legacy</button>
+      </div>
+    </div>
+
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">T</span>
+          tabs
+        </div>
+        <button class="nav-item"><span class="nav-icon">⌂</span>Overview</button>
+        <button class="nav-item"><span class="nav-icon">◎</span>Customers</button>
+        <button class="nav-item"><span class="nav-icon">□</span>Product catalog</button>
+        <button class="nav-item"><span class="nav-icon">◇</span>Contracts</button>
+        <button class="nav-item"><span class="nav-icon">▤</span>Invoicing</button>
+        <button class="nav-item"><span class="nav-icon">↗</span>Revenue</button>
+        <button class="nav-item"><span class="nav-icon">◫</span>Reporting</button>
+        <button class="nav-item"><span class="nav-icon">⌘</span>Data</button>
+        <button class="nav-item"><span class="nav-icon">‹›</span>Developers</button>
+        <div class="sidebar-spacer"></div>
+        <button class="nav-item"><span class="nav-icon">◫</span>Integrations</button>
+        <button class="nav-item active"><span class="nav-icon">⚙</span>Settings</button>
+
+        <div class="sidebar-user">
+          <div class="avatar">DB</div>
+          <div>
+            <div class="user-name">Deepak Bapat</div>
+            <div class="user-company">Acme Manufacturing</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar"><span>Settings</span><span><strong>Billing</strong></span></div>
+
+        <div class="settings-content">
+          <div class="billing-column">
+            <h1>Billing</h1>
+
+            <section class="billing-section">
+              <div>
+                <h2>Payment methods</h2>
+                <p class="billing-section-description">
+                  Choose the payment methods available to your customers.
+                </p>
+              </div>
+              <div>
+                <div class="existing-setting">
+                  <div><strong>ACH transfer</strong><span>Accept bank payments on invoices.</span></div>
+                  <span class="status-pill green"><span class="status-dot"></span>Enabled</span>
+                </div>
+                <div class="existing-setting">
+                  <div><strong>Credit card</strong><span>Accept card payments on invoices.</span></div>
+                  <span class="status-pill"><span class="status-dot"></span>Disabled</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="billing-section">
+              <div>
+                <h2>Email sender</h2>
+                <p class="billing-section-description">
+                  Choose the address customers see when they receive invoices, dunning,
+                  and agent emails.
+                </p>
+              </div>
+              <div>
+                <header class="feature-panel-head">
+                  <div>
+                    <strong>Contact and sending</strong>
+                    <p id="sender-summary">Tabs-owned sending is the default and requires no setup.</p>
+                  </div>
+                  <span class="status-pill green" id="sender-status">
+                    <span class="status-dot"></span><span id="sender-status-label">Through Tabs</span>
+                  </span>
+                </header>
+                <div class="field-grid">
+                  <label class="field">
+                    <span class="label">Contact email</span>
+                    <input class="input persistent-contact-field" type="email" value="billing@acme.com" />
+                    <span class="helper">Appears on invoices, credit memos, and checks.</span>
+                  </label>
+                  <label class="field">
+                    <span class="label">Display name</span>
+                    <input class="input persistent-contact-field" type="text" maxlength="60" value="Acme Billing" />
+                    <span class="helper">Used only when your own sender address is active.</span>
+                  </label>
+                </div>
+                <div class="divider"></div>
+
+                <section class="view active" id="view-default">
+                  <div class="feature-panel">
+                    <div class="feature-panel-body">
+                      <div class="section-title">How should billing emails be sent?</div>
+                      <div class="choice-grid">
+                        <div class="choice selected" tabindex="0" data-choice="tabs">
+                          <div class="choice-top">
+                            <span class="radio"></span>
+                            <span class="choice-title">Send through Tabs</span>
+                          </div>
+                          <p class="choice-copy">
+                            Customers see Acme Manufacturing and a secure Tabs-owned address.
+                            Nothing to set up.
+                          </p>
+                        </div>
+                        <div class="choice" tabindex="0" data-choice="custom">
+                          <div class="choice-top">
+                            <span class="radio"></span>
+                            <span class="choice-title">Send from this address</span>
+                          </div>
+                          <p class="choice-copy">
+                            Customers see Acme Billing &lt;billing@acme.com&gt;. Requires
+                            mailbox and DNS verification.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="view" id="view-code">
+                  <div class="feature-panel">
+                    <div class="steps">
+                      <div class="step complete"><span class="step-number">✓</span>Contact</div>
+                      <span class="step-line"></span>
+                      <div class="step current"><span class="step-number">2</span>Mailbox</div>
+                      <span class="step-line"></span>
+                      <div class="step"><span class="step-number">3</span>Domain</div>
+                    </div>
+                    <header class="feature-panel-head">
+                      <div>
+                        <strong>Verify your mailbox</strong>
+                        <p>Domain details stay private until mailbox access is proven.</p>
+                      </div>
+                      <span class="status-pill amber"><span class="status-dot"></span>Code sent</span>
+                    </header>
+                    <div class="feature-panel-body">
+                      <div class="code-wrap">
+                        <div class="mail-icon">✉</div>
+                        <p class="code-title">Check billing@acme.com</p>
+                        <p class="code-copy">
+                          Enter the six-digit code we sent. It expires in 10 minutes and
+                          allows five attempts.
+                        </p>
+                        <div class="code-inputs" aria-label="Six-digit verification code">
+                          <input class="digit" inputmode="numeric" maxlength="1" value="4" />
+                          <input class="digit" inputmode="numeric" maxlength="1" value="7" />
+                          <input class="digit" inputmode="numeric" maxlength="1" value="2" />
+                          <input class="digit" inputmode="numeric" maxlength="1" value="9" />
+                          <input class="digit" inputmode="numeric" maxlength="1" value="1" />
+                          <input class="digit" inputmode="numeric" maxlength="1" value="6" />
+                        </div>
+                        <div class="resend">
+                          Didn’t get it? <button class="button link">Resend in 42s</button>
+                        </div>
+                        <p class="persistence-note">
+                          You can leave this page and return later. The current code remains
+                          valid until it expires or you resend it.
+                        </p>
+                      </div>
+                      <div class="inline-actions">
+                        <button class="button stealth" data-reset="tabs">× Cancel setup</button>
+                        <button class="button primary" data-go="dns">Verify mailbox</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="view" id="view-dns">
+                  <div class="feature-panel">
+                    <div class="steps">
+                      <div class="step complete"><span class="step-number">✓</span>Contact</div>
+                      <span class="step-line"></span>
+                      <div class="step complete"><span class="step-number">✓</span>Mailbox</div>
+                      <span class="step-line"></span>
+                      <div class="step current"><span class="step-number">3</span>Domain</div>
+                    </div>
+                    <header class="feature-panel-head">
+                      <div>
+                        <strong>Verify acme.com</strong>
+                        <p>Add both records at your DNS provider. You can return later.</p>
+                      </div>
+                      <span class="status-pill amber"><span class="status-dot"></span>Setup required</span>
+                    </header>
+                    <div class="feature-panel-body">
+                      <div class="notice neutral" style="margin-bottom: 15px">
+                        <span class="notice-icon">i</span>
+                        <span>Mailbox verified for <strong>billing@acme.com</strong>.</span>
+                      </div>
+                      <div class="dns-list">
+                        <div class="dns-row">
+                          <span class="dns-type">TXT</span>
+                          <div>
+                            <div class="dns-name">DKIM</div>
+                            <div class="dns-value-line">
+                              <div class="dns-value">202608._domainkey → k=rsa; p=MIGfMA0GCSqGSIb3…</div>
+                              <button class="copy-button" type="button" data-copy="DKIM record">□ Copy</button>
+                            </div>
+                          </div>
+                          <span class="dns-status"><span class="status-dot"></span>Not verified</span>
+                        </div>
+                        <div class="dns-row">
+                          <span class="dns-type">CNAME</span>
+                          <div>
+                            <div class="dns-name">Return-Path</div>
+                            <div class="dns-value-line">
+                              <div class="dns-value">pm-bounces → pm.mtasv.net</div>
+                              <button class="copy-button" type="button" data-copy="Return-Path record">□ Copy</button>
+                            </div>
+                          </div>
+                          <span class="dns-status"><span class="status-dot"></span>Not verified</span>
+                        </div>
+                      </div>
+                      <div class="divider"></div>
+                      <div class="section-title">Reply delivery test</div>
+                      <p class="section-copy">
+                        Optional. A failed test shows a warning but does not block activation.
+                      </p>
+                      <button class="button">Send test email</button>
+                      <p class="persistence-note">
+                        DNS progress is saved automatically. You can finish this setup later.
+                      </p>
+                      <div class="inline-actions">
+                        <button class="button stealth" data-reset="address">↺ Change address</button>
+                        <button class="button">Finish later</button>
+                        <button class="button primary" id="check-dns">Check DNS records</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="view" id="view-active">
+                  <div class="feature-panel">
+                    <div class="feature-panel-body">
+                      <div class="success-panel">
+                        <div>
+                          <div class="success-icon">✓</div>
+                          <p class="code-title">Acme Billing is ready</p>
+                          <p class="code-copy" style="margin-bottom: 0">
+                            Mailbox, DKIM, and Return-Path are verified.
+                          </p>
+                          <div class="sender-preview">
+                            <span class="mini-avatar">A</span>
+                            <span><strong>Acme Billing</strong><br />billing@acme.com</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="notice">
+                        <span class="notice-icon">!</span>
+                        <span><strong>Reply delivery hasn’t been confirmed.</strong> Sending is
+                          active, but we recommend running a test.</span>
+                        <button class="button" style="margin-left: auto">Run test</button>
+                      </div>
+                      <div class="inline-actions">
+                        <button class="button stealth" data-reset="tabs">× Remove custom sender</button>
+                        <button class="button primary" data-reset="address">Change address</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="view" id="view-legacy">
+                  <div class="feature-panel">
+                    <header class="feature-panel-head">
+                      <div>
+                        <strong>Legacy configuration</strong>
+                        <p>Configured by Tabs before self-serve setup was available.</p>
+                      </div>
+                    </header>
+                    <div class="feature-panel-body">
+                      <div class="notice neutral" style="margin-bottom: 16px">
+                        <span class="notice-icon">i</span>
+                        <span><strong>This configuration is read-only.</strong> It will continue
+                          sending unchanged. Contact Tabs support to update it.</span>
+                      </div>
+                      <div class="legacy-grid">
+                        <div class="legacy-item">
+                          <div class="legacy-key">Sender</div>
+                          <div class="legacy-value">Acme Billing &lt;billing@acme.com&gt;</div>
+                        </div>
+                        <div class="legacy-item">
+                          <div class="legacy-key">Domain</div>
+                          <div class="legacy-value">acme.com</div>
+                        </div>
+                        <div class="legacy-item">
+                          <div class="legacy-key">DKIM</div>
+                          <div class="legacy-value" style="color: var(--green)">Verified</div>
+                        </div>
+                        <div class="legacy-item">
+                          <div class="legacy-key">Return-Path</div>
+                          <div class="legacy-value" style="color: var(--green)">Verified</div>
+                        </div>
+                      </div>
+                      <div class="inline-actions">
+                        <button class="button">Contact support</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </section>
+
+            <section class="billing-section">
+              <div>
+                <h2>Invoice settings</h2>
+                <p class="billing-section-description">
+                  Configure invoice numbering and customer-facing details.
+                </p>
+              </div>
+              <div>
+                <div class="field-grid">
+                  <label class="field">
+                    <span class="label">Invoice number prefix</span>
+                    <input class="input" value="INV-" />
+                  </label>
+                  <label class="field">
+                    <span class="label">Next invoice number</span>
+                    <input class="input" value="1042" />
+                  </label>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="settings-nav">
+            <div class="settings-nav-title">Settings</div>
+            <div class="settings-nav-item">General</div>
+            <div class="settings-nav-item active">Billing</div>
+            <div class="settings-nav-item">Dunning schedule</div>
+            <div class="settings-nav-item">Collections Agent</div>
+          </aside>
+        </div>
+
+        <div class="fixed-save">
+          <button class="button">Cancel</button>
+          <button class="button primary" id="save-default">Save</button>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const stateButtons = [...document.querySelectorAll(".state-button")];
+      const views = [...document.querySelectorAll(".view")];
+      const senderStatus = document.getElementById("sender-status");
+      const senderStatusLabel = document.getElementById("sender-status-label");
+      const senderSummary = document.getElementById("sender-summary");
+      const contactFields = [...document.querySelectorAll(".persistent-contact-field")];
+      const senderState = {
+        default: {
+          label: "Through Tabs",
+          summary: "Tabs-owned sending is the default and requires no setup.",
+          tone: "green",
+        },
+        code: {
+          label: "Mailbox verification",
+          summary: "Your contact details remain available while mailbox access is verified.",
+          tone: "amber",
+        },
+        dns: {
+          label: "DNS setup",
+          summary: "The mailbox is verified. Complete DNS setup to use your own address.",
+          tone: "amber",
+        },
+        active: {
+          label: "Active",
+          summary: "Your own address is used for customer-facing billing emails.",
+          tone: "green",
+        },
+        legacy: {
+          label: "Active · Legacy",
+          summary: "This sender remains active and is managed by Tabs.",
+          tone: "green",
+        },
+      };
+
+      function showState(state) {
+        stateButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.state === state);
+        });
+        views.forEach((view) => {
+          view.classList.toggle("active", view.id === `view-${state}`);
+        });
+        const meta = senderState[state];
+        senderStatus.className = `status-pill ${meta.tone}`.trim();
+        senderStatusLabel.textContent = meta.label;
+        senderSummary.textContent = meta.summary;
+        contactFields.forEach((field) => {
+          field.disabled = state === "legacy";
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      stateButtons.forEach((button) => {
+        button.addEventListener("click", () => showState(button.dataset.state));
+      });
+
+      document.querySelectorAll("[data-go]").forEach((button) => {
+        button.addEventListener("click", () => showState(button.dataset.go));
+      });
+
+      document.querySelectorAll("[data-reset]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const reset = button.dataset.reset;
+          choices.forEach((choice) => {
+            choice.classList.toggle("selected", choice.dataset.choice === (reset === "tabs" ? "tabs" : "custom"));
+          });
+          showState(reset === "tabs" ? "default" : "code");
+        });
+      });
+
+      document.querySelectorAll("[data-copy]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const original = button.textContent;
+          button.textContent = "✓ Copied";
+          setTimeout(() => {
+            button.textContent = original;
+          }, 1200);
+        });
+      });
+
+      const choices = [...document.querySelectorAll(".choice")];
+      choices.forEach((choice) => {
+        const select = () => {
+          choices.forEach((item) => item.classList.remove("selected"));
+          choice.classList.add("selected");
+        };
+        choice.addEventListener("click", select);
+        choice.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            select();
+          }
+        });
+      });
+
+      document.getElementById("save-default").addEventListener("click", () => {
+        const selected = document.querySelector(".choice.selected");
+        if (selected.dataset.choice === "custom") {
+          showState("code");
+        }
+      });
+
+      document.getElementById("check-dns").addEventListener("click", () => {
+        document.querySelectorAll(".dns-status").forEach((status) => {
+          status.classList.add("verified");
+          status.innerHTML = '<span class="status-dot"></span>Verified';
+        });
+        setTimeout(() => showState("active"), 650);
+      });
+
+      const digits = [...document.querySelectorAll(".digit")];
+      digits.forEach((digit, index) => {
+        digit.addEventListener("input", () => {
+          digit.value = digit.value.replace(/\D/g, "").slice(0, 1);
+          if (digit.value && digits[index + 1]) digits[index + 1].focus();
+        });
+        digit.addEventListener("keydown", (event) => {
+          if (event.key === "Backspace" && !digit.value && digits[index - 1]) {
+            digits[index - 1].focus();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
