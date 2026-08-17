@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tabs · AI-Generated Fields — Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;650&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --slate:   #001E2D;
+    --electric:#6AF3FF;
+    --paper:   #FFFFFF;
+    --page:    #F3F3F2;
+    --ink:     #05131A;
+    --muted:   #5E6A70;
+    --faint:   #97A1A6;
+    --line:    #E4E6E5;
+    --line-2:  #EDEEED;
+    --ai:      #0E7C99;          /* readable AI accent for text */
+    --violet:  #7C6BF5;
+
+    /* gradient palettes */
+    --g-electric: linear-gradient(90deg, #14BEDC, #6AF3FF, #14BEDC);
+    --g-ocean:    linear-gradient(90deg, #4FC3F7, #4B6BF5);
+    --g-aurora:   linear-gradient(90deg, #37C2D6, #5B6AF5, #9B6BF5);
+    --g-iris:     linear-gradient(90deg, #2FD4C4, #5B8CF5, #B968F0, #F56BB0);
+    --g-violet:   linear-gradient(90deg, #7C6BF5, #C06BF5);
+
+    --g-ai: var(--g-electric);   /* active gradient (playground-controlled) */
+    --spd: 1;                    /* animation speed multiplier */
+    --radius: 14px;
+
+    --bar-bg: rgba(255,255,255,.86);
+    --tint: linear-gradient(90deg, rgba(14,124,153,.06), rgba(106,243,255,.10));
+    --skel-a: #ECECEC; --skel-b: #F6F6F6;
+    --btn-tint: rgba(14,124,153,.08);
+    --btn-ink: var(--slate);
+  }
+  [data-theme="dark"] {
+    --page:#131413; --paper:#1E201E; --ink:#ECEDEB; --muted:#9BA29E; --faint:#6E7671;
+    --line:#34362F; --line-2:#2A2C28; --ai:#67D6EA;
+    --bar-bg: rgba(19,20,19,.82);
+    --tint: linear-gradient(90deg, rgba(103,214,234,.08), rgba(106,243,255,.10));
+    --skel-a:#2A2C28; --skel-b:#35372F;
+    --btn-tint: rgba(103,214,234,.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font-family: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; line-height: 1.5;
+    transition: background-color .25s ease, color .25s ease;
+  }
+  .mono { font-family: "Roboto Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 clamp(16px,4vw,40px) 60px; }
+
+  /* ============ PLAYGROUND CONTROL BAR ============ */
+  .bar {
+    position: sticky; top: 0; z-index: 30;
+    background: var(--bar-bg); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar-inner {
+    max-width: 1040px; margin: 0 auto; padding: 14px clamp(16px,4vw,40px);
+    display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  }
+  .preview {
+    display: flex; align-items: center; gap: 12px; flex: 0 0 auto;
+  }
+  .preview .ring { border-radius: 11px; padding: 1.5px; background: var(--g-ai); }
+  .preview .pfield {
+    background: var(--paper); border-radius: 9.5px; padding: 8px 12px; min-width: 170px;
+  }
+  .preview .pfield .lab { display:block; font-size:9.5px; letter-spacing:.11em; color:var(--faint); margin-bottom:2px; }
+  .preview .pfield .pv { display:flex; align-items:center; gap:7px; font-size:14px; color:var(--ai); font-weight:500; }
+  .preview .astage { width:22px; height:22px; }
+
+  .controls { display: flex; gap: 16px; flex-wrap: wrap; margin-left: auto; }
+  .ctrl { display: flex; flex-direction: column; gap: 4px; }
+  .ctrl > span { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  select {
+    appearance: none; font: inherit; font-size: 13px;
+    background: var(--paper) url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235E6A70' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 28px 7px 11px; color: var(--ink); cursor: pointer;
+  }
+  select:focus-visible { outline: 2px solid var(--ai); outline-offset: 1px; }
+
+  /* ============ HEADER ============ */
+  header { padding-top: 46px; margin-bottom: 42px; }
+  .pill {
+    display: inline-block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    background: var(--slate); color: var(--electric); padding: 4px 8px; border-radius: 6px; margin-bottom: 16px;
+  }
+  h1 { margin: 0 0 12px; font-size: clamp(28px,4.4vw,42px); font-weight: 650; letter-spacing:-.025em; line-height:1.05; }
+  header p { margin: 0; color: var(--muted); max-width: 62ch; font-size: 15.5px; }
+
+  section { margin-bottom: 48px; }
+  .sec-head { margin: 0 0 6px; font-size: 19px; font-weight: 620; letter-spacing:-.015em; }
+  .sec-sub  { margin: 0 0 22px; color: var(--muted); font-size: 14px; max-width: 68ch; }
+  .eyebrow-lbl { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ai); margin:0 0 8px; }
+
+  /* ============ field primitives ============ */
+  .field { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; position: relative; }
+  .field .lab { display:block; font-size:11px; letter-spacing:.02em; color:var(--faint); margin-bottom:3px; }
+  .field .val { display:flex; align-items:center; gap:8px; font-size:16.5px; color:var(--ink); min-height:24px; }
+  .field .val.ai { color: var(--ai); font-weight: 500; }
+  .spark { width:17px; height:17px; flex:0 0 auto; display:block; color: var(--ai); }
+
+  /* ============ HERO ============ */
+  .hero {
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 34px; display: grid; grid-template-columns: 1.25fr 1fr; gap: 34px; align-items: center;
+  }
+  @media (max-width: 720px){ .hero { grid-template-columns: 1fr; } }
+  .hero-copy h2 { margin:0 0 6px; font-size:15px; }
+  .hero-copy p { margin:0 0 16px; color:var(--muted); font-size:13.5px; }
+  .btn {
+    appearance:none; cursor:pointer; font: inherit; font-size:13.5px; font-weight:600;
+    color:var(--btn-ink); border:0; border-radius:9px; padding:11px 16px;
+    background: var(--g-ai); background-size:180% 100%;
+    display:inline-flex; align-items:center; gap:8px; transition: background-position .4s ease, transform .1s ease, color .25s ease;
+  }
+  .btn:hover { background-position: 100% 0; }
+  .btn:active { transform: translateY(1px); }
+  .btn .spark { width:16px; height:16px; color: var(--btn-ink); }
+
+  .ring { border-radius: 11px; padding: 1.5px; background: var(--line); }
+  .ring > .field { border: 0; border-radius: 9.5px; }
+  .ring.done { background: var(--g-ai); }
+  .ring.gen  { background: var(--g-ai); background-size: 260% 100%; animation: flow calc(2.6s * var(--spd)) linear infinite; }
+  @keyframes flow { to { background-position: 260% 0; } }
+
+  .skeleton {
+    height: 18px; border-radius: 5px; width: 62%;
+    background: linear-gradient(90deg, var(--skel-a) 0%, var(--skel-b) 40%, var(--skel-a) 80%);
+    background-size: 200% 100%; animation: shimmer calc(1.2s * var(--spd)) linear infinite;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  .fade-in { animation: fadeUp calc(.4s * var(--spd)) ease both; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(3px);} to {opacity:1; transform:none;} }
+
+  /* ============ grids / cells ============ */
+  .grid { display:grid; gap:18px; grid-template-columns: repeat(auto-fill, minmax(275px,1fr)); }
+  .cell { background: var(--paper); border:1px solid var(--line-2); border-radius: var(--radius); padding: 20px; display:flex; flex-direction:column; gap:14px; }
+  .cell.mid { align-items:center; text-align:center; }
+  .cell .tier { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .dots { display:inline-flex; gap:3px; }
+  .dots i { width:6px; height:6px; border-radius:50%; background: var(--line); }
+  .dots i.on { background: var(--ai); }
+  .cell h4 { margin:0; font-size:14px; font-weight:600; }
+  .cell .use { margin:0; font-size:12.5px; color:var(--muted); }
+
+  .t-tint  { background: var(--tint); }
+  .t-bar   { overflow:hidden; }
+  .t-bar::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--g-ai); }
+
+  /* ============ icon animation ============ */
+  .astage { width:46px; height:46px; display:grid; place-items:center; }
+  .astage .spark { width:100%; height:100%; filter: drop-shadow(0 0 2px rgba(20,190,220,.4)); transition: color .3s ease, filter .3s ease; }
+  .spark .rays, .spark .star { transform-box: fill-box; transform-origin: center; }
+
+  @keyframes spin        { to { transform: rotate(360deg); } }
+  @keyframes star-breathe{ 0%,100%{ transform:scale(.9);  opacity:.85 } 50%{ transform:scale(1.08); opacity:1 } }
+  @keyframes star-pop    { 0%,100%{ transform:scale(.85) }              50%{ transform:scale(1.14) } }
+  @keyframes rays-glow   { 0%,100%{ opacity:.5 }                        50%{ opacity:1 } }
+  @keyframes burst       { 0%{ transform:scale(.55); opacity:0 } 30%{ opacity:1 } 100%{ transform:scale(1.3); opacity:0 } }
+  @keyframes ray-blink   { 0%,100%{ opacity:.22 } 45%{ opacity:1 } }
+
+  [data-anim="twinkle"] .star { animation: star-breathe calc(2.4s * var(--spd)) ease-in-out infinite; }
+  [data-anim="twinkle"] .rays { animation: rays-glow    calc(2.4s * var(--spd)) ease-in-out infinite; }
+  [data-anim="spin"] .rays { animation: spin calc(4.5s * var(--spd)) linear infinite; }
+  [data-anim="spin"] .star { animation: star-breathe calc(3s * var(--spd)) ease-in-out infinite; }
+  [data-anim="burst"] .rays { animation: burst calc(1.8s * var(--spd)) ease-out infinite; }
+  [data-anim="burst"] .star { animation: star-breathe calc(1.8s * var(--spd)) ease-in-out infinite; }
+  [data-anim="shimmer"] .rays path { opacity:.22; animation: ray-blink calc(1.7s * var(--spd)) ease-in-out infinite; }
+  [data-anim="shimmer"] .rays path:nth-child(1){ animation-delay: calc(0s   * var(--spd)) }
+  [data-anim="shimmer"] .rays path:nth-child(2){ animation-delay: calc(.11s * var(--spd)) }
+  [data-anim="shimmer"] .rays path:nth-child(3){ animation-delay: calc(.22s * var(--spd)) }
+  [data-anim="shimmer"] .rays path:nth-child(4){ animation-delay: calc(.33s * var(--spd)) }
+  [data-anim="shimmer"] .rays path:nth-child(5){ animation-delay: calc(.44s * var(--spd)) }
+  [data-anim="shimmer"] .rays path:nth-child(6){ animation-delay: calc(.55s * var(--spd)) }
+  [data-anim="shimmer"] .rays path:nth-child(7){ animation-delay: calc(.66s * var(--spd)) }
+  [data-anim="shimmer"] .rays path:nth-child(8){ animation-delay: calc(.77s * var(--spd)) }
+  [data-anim="shimmer"] .star { animation: star-breathe calc(2s * var(--spd)) ease-in-out infinite; }
+  [data-anim="generating"] .spark { color:var(--violet); filter: drop-shadow(0 0 4px rgba(124,107,245,.6)); }
+  [data-anim="generating"] .rays { animation: spin calc(1.4s * var(--spd)) linear infinite; }
+  [data-anim="generating"] .star { animation: star-pop calc(1.4s * var(--spd)) ease-in-out infinite; }
+
+  /* ============ in-context chat generate ============ */
+  .incontext { background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:30px; }
+  .incontext h2 { margin:0 0 4px; font-size:15px; }
+  .incontext .hint { margin:0 0 20px; color:var(--muted); font-size:13.5px; }
+  .chat-field { display:flex; align-items:center; gap:10px; background:var(--page); border:1px solid var(--line); border-radius:12px; padding:6px 6px 6px 16px; transition:border-color .25s, box-shadow .25s; }
+  .chat-field.busy { border-color: rgba(124,107,245,.6); box-shadow:0 0 0 3px rgba(124,107,245,.14); }
+  .chat-field input { flex:1; background:transparent; border:0; outline:0; color:var(--ink); font-size:15px; font-family:inherit; padding:10px 0; }
+  .chat-field input::placeholder { color:var(--faint); }
+  .gen-btn2 { flex:0 0 auto; width:40px; height:40px; border-radius:9px; background:var(--btn-tint); border:1px solid var(--line); display:grid; place-items:center; cursor:pointer; transition:background .2s, border-color .2s; }
+  .gen-btn2:hover { border-color: rgba(103,214,234,.55); }
+  .gen-btn2:focus-visible { outline:2px solid var(--ai); outline-offset:2px; }
+  .gen-btn2 .astage { width:22px; height:22px; }
+  .caption { margin:14px 0 0; font-size:12px; color:var(--muted); }
+  .caption b { color:var(--violet); font-weight:600; }
+
+  /* ============ interaction patterns ============ */
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:640px){ .two { grid-template-columns:1fr; } }
+  .ghost-field { background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:13px 14px; font-size:15.5px; display:flex; align-items:center; flex-wrap:wrap; gap:2px; }
+  .ghost-field .typed { color:var(--ink); }
+  .ghost-field .ghost { color:var(--faint); }
+  .ghost-field .tab { margin-left:auto; font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:2px 7px; white-space:nowrap; }
+  .suggest-actions { margin-left:auto; display:inline-flex; gap:6px; }
+  .chip-btn { appearance:none; cursor:pointer; width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:var(--paper); color:var(--muted); display:grid; place-items:center; font-size:13px; transition: all .15s ease; }
+  .chip-btn.acc:hover { border-color:#0E9E6A; color:#0E9E6A; background:rgba(14,158,106,.08); }
+  .chip-btn.dis:hover { border-color:#D9534F; color:#D9534F; background:rgba(217,83,79,.08); }
+
+  /* ============ hues ============ */
+  .hues { display:grid; gap:16px; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); }
+  .hue { background:var(--paper); border:1px solid var(--line-2); border-radius:var(--radius); padding:18px; }
+  .swatch { height:44px; border-radius:9px; margin-bottom:12px; cursor:pointer; }
+  .hue h4 { margin:0 0 3px; font-size:13.5px; font-weight:600; }
+  .hue .hex { margin:0 0 14px; font-size:10.5px; color:var(--faint); letter-spacing:.02em; }
+  .mini { border-radius:9px; padding:1.4px; }
+  .mini > .field { border:0; border-radius:7.8px; padding:9px 12px; }
+  .apply-note { font-size:10.5px; color:var(--ai); margin:2px 0 0; }
+
+  /* ============ brand beam ============ */
+  .beam { position:relative; overflow:hidden; border-radius:var(--radius); background: var(--slate); color:#fff; padding:44px; min-height:200px; display:flex; align-items:center; }
+  .beam::after {
+    content:""; position:absolute; right:-10%; top:50%; width:70%; height:2px;
+    background: linear-gradient(90deg, transparent, #5B8CF5 50%, var(--electric));
+    box-shadow: 0 0 60px 30px rgba(106,243,255,.28); transform: translateY(-50%);
+    animation: beam calc(4s * var(--spd)) ease-in-out infinite;
+  }
+  @keyframes beam { 0%,100%{opacity:.6; width:60%;} 50%{opacity:1; width:74%;} }
+  .beam h3 { margin:0; font-size:24px; font-weight:600; line-height:1.2; max-width:18ch; position:relative; z-index:1; }
+  .beam p { margin:12px 0 0; font-size:13px; color:#9FB6C9; position:relative; z-index:1; }
+
+  footer { margin-top:46px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; letter-spacing:.12em; text-transform:uppercase; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation-duration:.001ms !important; animation-iteration-count:1 !important; } }
+</style>
+</head>
+<body>
+
+  <!-- ============ PLAYGROUND BAR ============ -->
+  <div class="bar">
+    <div class="bar-inner">
+      <div class="preview">
+        <div class="ring"><div class="pfield">
+          <span class="lab mono">BILLING TERMS</span>
+          <span class="pv"><span class="astage" id="previewStage" data-anim="twinkle"><svg class="spark"></svg></span> Auto-coded by Tabs</span>
+        </div></div>
+      </div>
+      <div class="controls">
+        <label class="ctrl"><span>Gradient</span>
+          <select id="selGradient">
+            <option value="--g-electric">Tabs Electric</option>
+            <option value="--g-ocean">Ocean</option>
+            <option value="--g-aurora">Aurora</option>
+            <option value="--g-iris">Iris</option>
+            <option value="--g-violet">Violet</option>
+          </select>
+        </label>
+        <label class="ctrl"><span>Icon</span>
+          <select id="selIcon">
+            <option value="filled">Filled</option>
+            <option value="outline">Outline</option>
+          </select>
+        </label>
+        <label class="ctrl"><span>Motion</span>
+          <select id="selMotion">
+            <option value="twinkle">Twinkle</option>
+            <option value="spin">Ray spin</option>
+            <option value="burst">Burst</option>
+            <option value="shimmer">Shimmer</option>
+            <option value="generating">Generating</option>
+          </select>
+        </label>
+        <label class="ctrl"><span>Speed</span>
+          <select id="selSpeed">
+            <option value="1.6">Slow</option>
+            <option value="1" selected>Normal</option>
+            <option value="0.55">Fast</option>
+          </select>
+        </label>
+        <label class="ctrl"><span>Theme</span>
+          <select id="selTheme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <header>
+      <span class="pill mono">Tabs · AI Coding</span>
+      <h1>When AI codes the field</h1>
+      <p>Tabs reads the signed contract and fills in the billing terms. These are the ways to show a finance team that a value came from AI — tuned from a quiet mark to a full gradient, with motion reserved for the moment of generation. Use the bar above to play with the look.</p>
+    </header>
+
+    <!-- ============ HERO ============ -->
+    <section>
+      <div class="hero">
+        <div>
+          <div class="ring" id="ring"><div class="field">
+            <span class="lab">Revenue Recognition</span>
+            <div class="val" id="heroVal"><svg class="spark"></svg><span>Ratable over contract term</span></div>
+          </div></div>
+        </div>
+        <div class="hero-copy">
+          <h2>The generating moment</h2>
+          <p>Spend the color here: a flowing gradient while Tabs extracts terms from the contract, calming to a quiet mark once the value lands. Motion earns attention only during the act of generating.</p>
+          <button class="btn" id="genBtn"><svg class="spark"></svg> Generate from contract</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ IN CONTEXT (chat generate) ============ -->
+    <section>
+      <div class="incontext">
+        <h2>In context</h2>
+        <p class="hint">Click the sparkle to generate.</p>
+        <div class="chat-field" id="chatField">
+          <input id="chatInput" type="text" readonly placeholder="Draft a billing reminder…" />
+          <button class="gen-btn2" id="chatBtn" aria-label="Generate">
+            <span class="astage" id="chatStage" data-anim="twinkle"><svg class="spark"></svg></span>
+          </button>
+        </div>
+        <p class="caption">Idle → <b>generating</b> → result, then back to idle.</p>
+      </div>
+    </section>
+
+    <!-- ============ ICON ANIMATIONS ============ -->
+    <section>
+      <h3 class="sec-head">Icon animations</h3>
+      <p class="sec-sub">The mark, with wider ray spacing so it stays legible inline. Everything here reflects the Icon, Motion, and Speed controls above.</p>
+      <div class="grid">
+        <div class="cell mid"><span class="astage" data-anim="twinkle"><svg class="spark"></svg></span><h4>Twinkle</h4><p class="use">Gentle idle breath.</p></div>
+        <div class="cell mid"><span class="astage" data-anim="spin"><svg class="spark"></svg></span><h4>Ray spin</h4><p class="use">Rays orbit the star.</p></div>
+        <div class="cell mid"><span class="astage" data-anim="burst"><svg class="spark"></svg></span><h4>Burst</h4><p class="use">Rays radiate and fade.</p></div>
+        <div class="cell mid"><span class="astage" data-anim="shimmer"><svg class="spark"></svg></span><h4>Shimmer</h4><p class="use">Rays light up in sequence.</p></div>
+        <div class="cell mid"><span class="astage" data-anim="generating"><svg class="spark"></svg></span><h4>Generating</h4><p class="use">Violet, fast — active state.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ SPECTRUM ============ -->
+    <section>
+      <h3 class="sec-head">Detail vs. visibility</h3>
+      <p class="sec-sub">More dots = more prominent. Pick the lowest level that still reads as AI in context. Terms Tabs codes in bulk want the quiet end; a single high-stakes value can afford the loud end.</p>
+      <div class="grid" id="spectrum"></div>
+    </section>
+
+    <!-- ============ INTERACTION ============ -->
+    <section>
+      <h3 class="sec-head">Interaction patterns</h3>
+      <p class="sec-sub">Two behaviours cover most cases: an inline completion the user accepts, and a suggested value they can accept or dismiss.</p>
+      <div class="two">
+        <div class="cell">
+          <div class="tier">Inline completion</div>
+          <div class="ghost-field" id="ghost">
+            <span class="typed" id="ghostTyped">Platform subscription for</span><span class="ghost" id="ghostRest">&nbsp;Acme's NYC entity — annual term, billed monthly</span>
+            <span class="tab mono">Tab to accept</span>
+          </div>
+          <p class="use">Gray suggestion trails the cursor; Tab commits it. Best for invoice memos and line-item descriptions. (Click to accept here.)</p>
+        </div>
+        <div class="cell">
+          <div class="tier">Suggested value</div>
+          <div class="field" id="suggest">
+            <span class="lab">Payment Terms</span>
+            <div class="val ai"><svg class="spark"></svg><span>Net 30</span>
+              <span class="suggest-actions">
+                <button class="chip-btn acc" id="accBtn" aria-label="Accept">✓</button>
+                <button class="chip-btn dis" id="disBtn" aria-label="Dismiss">✕</button>
+              </span>
+            </div>
+          </div>
+          <p class="use">Tabs proposes; the person confirms. On accept, drop to the quiet mark — the badge has done its job.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HUES ============ -->
+    <section>
+      <h3 class="sec-head">Gradient hue ideas</h3>
+      <p class="sec-sub">How colorful should AI read? Tabs Electric stays close to the brand accent; iris and aurora feel unmistakably generated. Click any swatch to apply it across the page. One rule of balance: let a single gradient own the AI meaning everywhere, so the color always means the same thing.</p>
+      <div class="hues" id="hues"></div>
+    </section>
+
+    <!-- ============ BEAM ============ -->
+    <section>
+      <h3 class="sec-head">Where the color comes from</h3>
+      <p class="sec-sub">The brand's Electric Blue beam is the source the field gradients borrow from — one ambient accent, used sparingly.</p>
+      <div class="beam">
+        <div>
+          <h3>The gradient is the signal.</h3>
+          <p>One accent, one meaning: Tabs wrote this value.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mono">The revenue platform for modern finance teams</footer>
+  </div>
+
+<script>
+  /* -------- sparkle icon (new spaced rays + star) -------- */
+  const RAYS = [
+    "M13 0V3.5","M23.5 2.5L18.6 7.4","M22.5 13H26","M18.6 18.6C20.6092 20.6092 23.5 23.3975 23.5 23.3975",
+    "M13 22.5V26","M7.4 18.6L2.5 23.5","M0 13H3.36","M2.5 2.5L7.4 7.4"
+  ];
+  const STAR = "M12.7568 14.5459C12.7568 14.1103 12.4088 13.7344 11.9541 13.7344H11.9531L8.25195 13.748V12.3916C10.5697 12.187 12.523 10.5724 13.2578 8.33789V11.6006C13.2578 12.0343 13.6033 12.4121 14.0596 12.4121H14.0605L17.7617 12.3994V13.7559C15.4429 13.9608 13.4894 15.5774 12.7568 17.8145V14.5459Z";
+  const STAR_OUTLINE = "M12.5068 18.6699V14.5459C12.5068 14.28 12.3216 14.0495 12.0674 13.9961L11.9541 13.9844L8.00195 13.999V12.1582C10.5732 12.04 12.73 10.1063 13.2168 7.49219H13.5078V11.6006C13.5078 11.9035 13.7486 12.1621 14.0596 12.1621L18.0117 12.1484V13.9893C15.4364 14.1078 13.278 16.0485 12.7979 18.6699H12.5068Z";
+
+  let ICON_OUTLINE = false;
+  function paintSpark(svg) {
+    const rayW = ICON_OUTLINE ? 0.9 : 2;   // thinner rays for the outline mark
+    const rays = RAYS.map(d => `<path d="${d}" stroke="currentColor" stroke-width="${rayW}" stroke-linecap="round"/>`).join("");
+    const star = ICON_OUTLINE
+      ? `<path class="star" d="${STAR_OUTLINE}" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linejoin="round"/>`
+      : `<path class="star" d="${STAR}" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>`;
+    svg.setAttribute("viewBox","0 0 26 26"); svg.setAttribute("fill","none");
+    svg.innerHTML = `<g class="rays">${rays}</g>${star}`;
+  }
+  function repaintAll(){ document.querySelectorAll("svg.spark").forEach(paintSpark); }
+
+  /* -------- spectrum (Tabs contract-coded fields) -------- */
+  const LEVELS = [
+    { on:1, name:"Quiet mark", use:"Just the sparkle + accent. For terms Tabs codes in bulk.",
+      field:`<div class="field"><span class="lab">Billing Frequency</span>
+             <div class="val ai"><svg class="spark"></svg><span>Monthly, in advance</span></div></div>` },
+    { on:2, name:"Tinted wash", use:"A faint gradient fill. Groups AI-coded fields at a glance.",
+      field:`<div class="field t-tint"><span class="lab">Payment Terms</span>
+             <div class="val ai"><svg class="spark"></svg><span>Net 30</span></div></div>` },
+    { on:3, name:"Gradient edge", use:"A gradient left bar. Marks origin without recoloring the value.",
+      field:`<div class="field t-bar"><span class="lab">Revenue Recognition</span>
+             <div class="val"><svg class="spark"></svg><span>Ratable · 12 mo</span></div></div>` },
+    { on:4, name:"Gradient ring", use:"Full gradient border. Clearly, deliberately AI.",
+      field:`<div class="ring done"><div class="field"><span class="lab">Annual Contract Value</span>
+             <div class="val ai"><svg class="spark"></svg><span>$144,000</span></div></div></div>` },
+    { on:5, name:"Generating", use:"Flowing border while Tabs extracts the term. Reserve for the active moment.",
+      field:`<div class="ring gen"><div class="field"><span class="lab">Renewal Term</span>
+             <div class="val"><span class="skeleton"></span></div></div></div>` },
+  ];
+  const spectrum = document.getElementById("spectrum");
+  LEVELS.forEach((lv,idx)=>{
+    const dots = Array.from({length:5},(_,i)=>`<i class="${i<lv.on?'on':''}"></i>`).join("");
+    const cell = document.createElement("div"); cell.className = "cell";
+    cell.innerHTML = `<div class="tier"><span class="dots">${dots}</span> Level 0${idx+1}</div>
+                      <h4>${lv.name}</h4>${lv.field}<p class="use">${lv.use}</p>`;
+    spectrum.appendChild(cell);
+  });
+
+  /* -------- hues (Tabs Electric added) -------- */
+  const HUES = [
+    { name:"Tabs Electric", var:"--g-electric", hex:"#14BEDC → #6AF3FF → #14BEDC", tag:"on-brand" },
+    { name:"Ocean",  var:"--g-ocean",  hex:"#4FC3F7 → #4B6BF5", tag:"restrained" },
+    { name:"Aurora", var:"--g-aurora", hex:"#37C2D6 → #5B6AF5 → #9B6BF5" },
+    { name:"Iris",   var:"--g-iris",   hex:"#2FD4C4 → #5B8CF5 → #B968F0 → #F56BB0" },
+    { name:"Violet", var:"--g-violet", hex:"#7C6BF5 → #C06BF5" },
+  ];
+  const hues = document.getElementById("hues");
+  HUES.forEach(h=>{
+    const g = `var(${h.var})`;
+    const el = document.createElement("div"); el.className = "hue";
+    el.innerHTML = `
+      <div class="swatch" data-var="${h.var}" style="background:${g}"></div>
+      <h4>${h.name}${h.tag?` · ${h.tag}`:""}</h4>
+      <p class="hex mono">${h.hex}</p>
+      <div class="mini" style="background:${g}"><div class="field">
+        <span class="lab">Billing Frequency</span>
+        <div class="val ai"><svg class="spark"></svg><span>Monthly, in advance</span></div>
+      </div></div>
+      <p class="apply-note">Click swatch to apply →</p>`;
+    hues.appendChild(el);
+  });
+
+  repaintAll();
+
+  /* -------- playground controls -------- */
+  const root = document.documentElement;
+  const previewStage = document.getElementById("previewStage");
+
+  const BTN_INK = {
+    "--g-electric": "#001E2D", // dark text on the light cyan gradient
+    "--g-ocean":    "#FFFFFF",
+    "--g-aurora":   "#FFFFFF",
+    "--g-iris":     "#FFFFFF",
+    "--g-violet":   "#FFFFFF",
+  };
+  function applyGradient(v) {
+    root.style.setProperty("--g-ai", `var(${v})`);
+    root.style.setProperty("--btn-ink", BTN_INK[v] || "#FFFFFF");
+    document.getElementById("selGradient").value = v;
+  }
+  document.getElementById("selGradient").addEventListener("change", e => applyGradient(e.target.value));
+  document.getElementById("selIcon").addEventListener("change", e => {
+    ICON_OUTLINE = e.target.value === "outline"; repaintAll();
+  });
+  document.getElementById("selMotion").addEventListener("change", e => {
+    previewStage.dataset.anim = e.target.value;
+  });
+  document.getElementById("selSpeed").addEventListener("change", e => {
+    root.style.setProperty("--spd", e.target.value);
+  });
+  document.getElementById("selTheme").addEventListener("change", e => {
+    root.dataset.theme = e.target.value;
+  });
+  // swatches apply the gradient + sync the dropdown
+  hues.querySelectorAll(".swatch").forEach(sw => {
+    sw.addEventListener("click", () => applyGradient(sw.dataset.var));
+  });
+
+  /* -------- hero generate -------- */
+  const ring = document.getElementById("ring");
+  const heroVal = document.getElementById("heroVal");
+  const genBtn = document.getElementById("genBtn");
+  const heroDone = heroVal.innerHTML;
+  let running = false;
+  genBtn.addEventListener("click", ()=>{
+    if (running) return; running = true;
+    ring.classList.remove("done"); ring.classList.add("gen");
+    heroVal.innerHTML = `<span class="skeleton"></span>`;
+    setTimeout(()=>{
+      ring.classList.remove("gen"); ring.classList.add("done");
+      heroVal.innerHTML = heroDone; heroVal.classList.add("fade-in");
+      repaintAll();
+      setTimeout(()=>{ ring.classList.remove("done"); heroVal.classList.remove("fade-in"); running=false; }, 2200);
+    }, 1600);
+  });
+
+  /* -------- in-context chat generate -------- */
+  const chatField = document.getElementById("chatField");
+  const chatInput = document.getElementById("chatInput");
+  const chatBtn   = document.getElementById("chatBtn");
+  const chatStage = document.getElementById("chatStage");
+  const CHAT_SAMPLE = "Hi Jordan — quick heads up that invoice #1042 is scheduled to bill on the 1st. Let me know if anything needs to change before then.";
+  let chatBusy = false;
+  chatBtn.addEventListener("click", ()=>{
+    if (chatBusy) return; chatBusy = true;
+    chatStage.dataset.anim = "generating"; chatField.classList.add("busy");
+    chatInput.value = ""; chatInput.placeholder = "Generating…";
+    setTimeout(()=>{
+      let i = 0;
+      const type = setInterval(()=>{
+        chatInput.value = CHAT_SAMPLE.slice(0, ++i);
+        if (i >= CHAT_SAMPLE.length) {
+          clearInterval(type);
+          chatStage.dataset.anim = "twinkle"; chatField.classList.remove("busy");
+          chatInput.placeholder = "Draft a billing reminder…"; chatBusy = false;
+        }
+      }, 20);
+    }, 900);
+  });
+
+  /* -------- ghost completion -------- */
+  const ghost = document.getElementById("ghost");
+  ghost.addEventListener("click", ()=>{
+    const typed = document.getElementById("ghostTyped");
+    const rest  = document.getElementById("ghostRest");
+    if (!rest.textContent.trim()) return;
+    typed.textContent += rest.textContent; rest.textContent = "";
+    ghost.querySelector(".tab").textContent = "Accepted";
+  });
+
+  /* -------- suggested value -------- */
+  const suggest = document.getElementById("suggest");
+  document.getElementById("accBtn").addEventListener("click", ()=>{ suggest.querySelector(".suggest-actions").remove(); });
+  document.getElementById("disBtn").addEventListener("click", ()=>{ suggest.querySelector(".val").innerHTML = `<span style="color:var(--faint)">Select terms…</span>`; });
+</script>
+</body>
+</html>
