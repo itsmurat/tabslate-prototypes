@@ -1,0 +1,1 @@
+import{j as o}from"./index-COxaLmPa.js";import{be as r}from"./tabs-HfhWXlBC.js";function n({className:e,children:t,...s}){return o.jsx("h1",{className:r("text-base font-bold flex items-center justify-between mb-4",e),...s,children:t})}export{n as T};
