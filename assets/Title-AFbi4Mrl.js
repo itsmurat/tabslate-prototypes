@@ -1,0 +1,1 @@
+import{j as o}from"./index-B7D-3iRH.js";import{bt as r}from"./tabs-LtH4FOJQ.js";function n({className:t,children:e,...s}){return o.jsx("h1",{className:r("text-base font-bold flex items-center justify-between mb-4",t),...s,children:e})}export{n as T};
