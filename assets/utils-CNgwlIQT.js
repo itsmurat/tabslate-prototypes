@@ -1,0 +1,1 @@
+const m=(r,t="USD",e)=>{const n=typeof r=="number"?r:Number(r);if(Number.isNaN(n))return String(r);const i=e!==void 0?{minimumFractionDigits:e,maximumFractionDigits:e}:{};return new Intl.NumberFormat("en-US",{style:"currency",currency:t,...i}).format(n)};export{m as f};
