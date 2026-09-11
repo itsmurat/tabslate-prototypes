@@ -1,0 +1,6 @@
+import{c as d,C as c,b as l}from"./tabs-DYZD541x.js";import{j as e}from"./index-BSVJ1b0Y.js";import{T as g}from"./TabsMark-0T5eyGzn.js";/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const f=[["path",{d:"M3 3v16a2 2 0 0 0 2 2h16",key:"c24i48"}],["path",{d:"m19 9-5 5-4-4-3 3",key:"2osh9i"}]],p=d("chart-line",f),h={quiet:"",wash:"ai-wash",edge:"ai-edge",ring:"ai-ring border-2",generating:"ai-sweep border-2"};function j({label:t,value:n,emphasis:a="quiet",mono:r=!1,className:o}){const i=a==="generating",s=a==="quiet"||a==="wash"||a==="ring";return e.jsxs("div",{"data-slot":"ai-field","data-handoff-component":"AIField","data-handoff-label":t,"data-handoff-state":a,className:`tabs-ai rounded-[var(--ai-radius)] border border-neutral-200 px-3 py-2 ${h[a]} ${o??""}`,children:[e.jsx(c,{as:"div",shade:"muted",children:t}),e.jsxs("div",{className:"mt-1 flex items-center gap-1.5",children:[e.jsx(g,{size:15,state:i?"generating":"still"}),i?e.jsx("span",{className:"ai-skeleton w-28","aria-label":`Generating ${t}`}):e.jsx(l,{as:"span",family:r?"mono":void 0,style:s?{color:"var(--ai-color)"}:void 0,children:n})]})]})}export{j as A,p as C};
