@@ -1,1 +1,0 @@
-import{r as n}from"./index-BCnckBip.js";function u(t){n.useEffect(()=>{const o=document.title,e=t.trim()||"Tabslate";return document.title=e,()=>{document.title===e&&(document.title=o)}},[t])}export{u};
