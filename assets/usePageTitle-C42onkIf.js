@@ -1,1 +1,0 @@
-import{r as n}from"./index-Z4oiK9_0.js";function u(t){n.useEffect(()=>{const o=document.title,e=t.trim()||"Tabslate";return document.title=e,()=>{document.title===e&&(document.title=o)}},[t])}export{u};
